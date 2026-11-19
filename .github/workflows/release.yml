@@ -40,9 +40,12 @@ jobs:
           java-version: '27'
 
       - name: Decode Keystore if provided
-        if: ${{ secrets.RELEASE_KEYSTORE != '' }}
-        run: echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > release.jks
-
+        env:
+          RELEASE_KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE }}
+        run: |
+          if [[ -n "$RELEASE_KEYSTORE_B64" ]]; then
+            echo "$RELEASE_KEYSTORE_B64" | base64 --decode > release.jks
+          fi
       - name: Build Release APKs
         run: |
           chmod +x ./gradlew
