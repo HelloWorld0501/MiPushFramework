@@ -39,13 +39,18 @@ jobs:
           distribution: temurin
           java-version: '27'
 
-      - name: Decode Keystore if provided
+      - name: Decode Keystore
         env:
           RELEASE_KEYSTORE_B64: ${{ secrets.RELEASE_KEYSTORE }}
         run: |
-          if [[ -n "$RELEASE_KEYSTORE_B64" ]]; then
-            echo "$RELEASE_KEYSTORE_B64" | base64 --decode > release.jks
+          set -euo pipefail
+          if [[ -z "$RELEASE_KEYSTORE_B64" ]]; then
+            echo "::error::RELEASE_KEYSTORE secret is empty"
+            exit 1
           fi
+          printf '%s' "$RELEASE_KEYSTORE_B64" | tr -d '[:space:]' | base64 --decode > release.jks
+          test -s release.jks
+
       - name: Build Release APKs
         run: |
           chmod +x ./gradlew
